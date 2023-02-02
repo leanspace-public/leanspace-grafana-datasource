@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "Metrics",
+  "id": "leanspace-metrics-datasource",
+  "metrics": true,
+  "info": {
+    "description": "Metrics explore data plugin",
+    "author": {
+      "name": "Leanspace"
+    },
+    "keywords": ["datasource"],
+    "logos": {
+      "small": "https://leanspace.io/wp-content/uploads/2022/01/logo-basique.svg",
+      "large": "https://leanspace.io/wp-content/uploads/2022/01/logo-basique.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": "^9.2.5",
+    "plugins": []
+  },
+  "routes": [
+    {
+      "path": "metrics-repository/explore",
+      "url": "https://api.develop.leanspace.io/metrics-repository/explore",
+      "method": "POST",
+      "tokenAuth": {
+        "url": "https://{{ .JsonData.tenant }}-develop.auth.eu-central-1.amazoncognito.com/oauth2/token",
+        "scopes": ["https://api.leanspace.io/READ"],
+        "params": {
+          "grant_type": "client_credentials",
+          "client_id": "{{ .SecureJsonData.clientId }}",
+          "client_secret": "{{ .SecureJsonData.clientSecret }}"
+        }
+      }
+    }
+  ]
+}
