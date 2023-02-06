@@ -19,7 +19,7 @@ export class DataSource extends DataSourceApi<MyQuery, DataSourceOptions> {
     this.baseUrl = instanceSettings.url!;
   }
   async query(options: DataQueryRequest<MyQuery>): Promise<DataQueryResponse> {
-    const { startTime, endTime, targets } = options;
+    const { targets } = options;
     const promises = targets.map(async (target) => {
       const query = defaults(target, DEFAULT_QUERY);
       const params = {
@@ -29,8 +29,12 @@ export class DataSource extends DataSourceApi<MyQuery, DataSourceOptions> {
         timeDimension: {
           dimension: 'timestamp',
           dateRange: [
-            query?.startDateTime?.toISOString() || new Date().toISOString(),
-            query?.endDateTime?.toISOString() || new Date().toISOString(),
+            typeof query?.startDateTime === 'string'
+              ? new Date(query?.startDateTime)
+              : query?.startDateTime?.toISOString() || new Date().toISOString(),
+            typeof query?.endDateTime === 'string'
+              ? new Date(query?.endDateTime)
+              : query?.endDateTime?.toISOString() || new Date().toISOString(),
           ],
         },
         dimensions: ['timestamp', 'value'],

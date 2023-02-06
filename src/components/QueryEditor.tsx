@@ -1,5 +1,5 @@
-import { DateTime, QueryEditorProps, TimeRange, dateTime, dateTimeFormat } from '@grafana/data';
-import { DateTimePicker, LegacyForms, TimeRangePicker } from '@grafana/ui';
+import { DateTime, QueryEditorProps, dateTime } from '@grafana/data';
+import { DateTimePicker, LegacyForms } from '@grafana/ui';
 import React, { ChangeEvent, PureComponent } from 'react';
 import { DataSource } from '../datasource';
 import { DataSourceOptions, MyQuery } from '../types';

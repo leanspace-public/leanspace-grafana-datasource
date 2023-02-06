@@ -1,4 +1,4 @@
-import { DataQuery, DataSourceJsonData, DateTime, TimeRange } from '@grafana/data';
+import { DataQuery, DataSourceJsonData, DateTime } from '@grafana/data';
 
 export interface MyQuery extends DataQuery {
   metricId: string;
