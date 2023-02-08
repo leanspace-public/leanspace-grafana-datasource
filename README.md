@@ -1,13 +1,8 @@
-# Grafana data source plugin template
-
-This template is a starting point for building a Data Source Plugin for Grafana.
-
 ## What are Grafana data source plugins?
 
 Grafana supports a wide range of data sources, including Prometheus, MySQL, and even Datadog. There’s a good chance you can already visualize metrics from the systems you have set up. In some cases, though, you already have an in-house metrics solution that you’d like to add to your Grafana dashboards. Grafana Data Source Plugins enables integrating such solutions with Grafana.
 
 ## Getting started
-
 
 ### Frontend
 
@@ -34,7 +29,7 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
    ```bash
    # Runs the tests and watches for changes, requires git init first
    yarn test
-   
+
    # Exists after running all the tests
    yarn test:ci
    ```
@@ -48,9 +43,9 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
 6. Run the E2E tests (using Cypress)
 
    ```bash
-   # Spin up a Grafana instance first that we tests against 
+   # Spin up a Grafana instance first that we tests against
    yarn server
-   
+
    # Start the tests
    yarn e2e
    ```
@@ -59,12 +54,11 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
 
    ```bash
    yarn lint
-   
+
    # or
 
    yarn lint:fix
    ```
-
 
 # Distributing your plugin
 
@@ -104,7 +98,6 @@ To trigger the workflow we need to push a version tag to github. This can be ach
 
 1. Run `npm version <major|minor|patch>`
 2. Run `git push origin main --follow-tags`
-
 
 ## Learn more
 
