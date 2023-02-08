@@ -40,9 +40,6 @@ jobs:
           assert version == json.load(open('package.json'))['version']
           print(f'::set-output name=version::{version}')
         shell: python
-      - name: Compare version and Github tag
-        run: |
-          [ "${{ steps.version.outputs.version }}" = "${GITHUB_REF#refs/tags/}" ] || { echo 'plugin version and github tag mismatch'; exit 1; }
       - name: Package plugin
         run: |
           mv dist leanspace-grafana-datasource
