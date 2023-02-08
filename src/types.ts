@@ -1,15 +1,17 @@
-import { DataQuery, DataSourceJsonData, DateTime } from '@grafana/data';
+import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
 export interface MyQuery extends DataQuery {
-  metricId: string;
-  startDateTime: DateTime;
-  endDateTime: DateTime;
+  dimension: string;
+  type: number;
+  granularity: string;
+  jsonString: string;
 }
 
 export const DEFAULT_QUERY: Partial<MyQuery> = {
-  metricId: '',
-  startDateTime: undefined,
-  endDateTime: undefined,
+  dimension: 'timestamp',
+  type: 0,
+  granularity: 'hour',
+  jsonString: '{}',
 };
 
 /**
@@ -20,6 +22,7 @@ export interface DataSourceOptions extends DataSourceJsonData {
   tenant: string;
   clientSecret: string;
   clientId: string;
+  apiEnv: string;
 }
 
 /**
@@ -31,6 +34,7 @@ export interface SecureJsonData {
 }
 export interface DataSourceResponse {
   data: DataPoint[];
+  nextToken: string;
 }
 export interface DataPoint {
   ingested_at: string;

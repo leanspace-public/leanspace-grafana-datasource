@@ -1,11 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "Metrics",
-  "id": "leanspace-metrics-datasource",
+  "name": "Leanspace",
+  "id": "leanspace-grafana-datasource",
   "metrics": true,
   "info": {
-    "description": "Metrics explore data plugin",
+    "description": "Leanspace dashboard in grafana",
     "author": {
       "name": "Leanspace"
     },
@@ -26,10 +26,24 @@
   "routes": [
     {
       "path": "metrics-repository/explore",
-      "url": "https://api.develop.leanspace.io/metrics-repository/explore",
+      "url": "https://api.{{ .JsonData.apiEnv }}leanspace.io/metrics-repository/explore",
       "method": "POST",
       "tokenAuth": {
-        "url": "https://{{ .JsonData.tenant }}-develop.auth.eu-central-1.amazoncognito.com/oauth2/token",
+        "url": "https://{{ .JsonData.tenant }}-{{ .JsonData.env }}.auth.eu-central-1.amazoncognito.com/oauth2/token",
+        "scopes": ["https://api.leanspace.io/READ"],
+        "params": {
+          "grant_type": "client_credentials",
+          "client_id": "{{ .SecureJsonData.clientId }}",
+          "client_secret": "{{ .SecureJsonData.clientSecret }}"
+        }
+      }
+    },
+    {
+      "path": "streams-repository/explore",
+      "url": "https://api.{{ .JsonData.apiEnv }}leanspace.io/streams-repository/explore",
+      "method": "POST",
+      "tokenAuth": {
+        "url": "https://{{ .JsonData.tenant }}-{{ .JsonData.env }}.auth.eu-central-1.amazoncognito.com/oauth2/token",
         "scopes": ["https://api.leanspace.io/READ"],
         "params": {
           "grant_type": "client_credentials",

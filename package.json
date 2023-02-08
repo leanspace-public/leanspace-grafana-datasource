@@ -1,7 +1,7 @@
 {
-  "name": "metrics",
+  "name": "leansapce",
   "version": "1.0.0",
-  "description": "Metrics explore data plugin",
+  "description": "Leansapce dashboard in grafana",
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
     "dev": "webpack -w -c ./.config/webpack/webpack.config.ts --env development",

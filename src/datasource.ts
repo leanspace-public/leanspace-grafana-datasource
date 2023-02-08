@@ -7,11 +7,14 @@ import {
   FieldType,
 } from '@grafana/data';
 
-import { MyQuery, DEFAULT_QUERY, DataSourceOptions, DataSourceResponse } from './types';
-import _, { defaults } from 'lodash';
+import { MyQuery, DEFAULT_QUERY, DataSourceOptions, DataSourceResponse, DataPoint } from './types';
+
+import isString from 'lodash/isString';
+import defaults from 'lodash/defaults';
 import { getBackendSrv, isFetchError } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 
+const API_MAP = ['streams-repository', 'metrics-repository'];
 export class DataSource extends DataSourceApi<MyQuery, DataSourceOptions> {
   baseUrl: string;
   constructor(instanceSettings: DataSourceInstanceSettings<DataSourceOptions>) {
@@ -22,53 +25,52 @@ export class DataSource extends DataSourceApi<MyQuery, DataSourceOptions> {
     const { targets } = options;
     const promises = targets.map(async (target) => {
       const query = defaults(target, DEFAULT_QUERY);
+      const { jsonString, dimension, granularity, type } = query;
+      const validJSON = JSON.parse(jsonString);
       const params = {
-        filters: [{ member: 'metric_id', operator: 'equals', values: [query.metricId] }],
-        order: { timestamp: 'DESC' },
-        limit: 100,
+        ...validJSON,
         timeDimension: {
-          dimension: 'timestamp',
-          dateRange: [
-            typeof query?.startDateTime === 'string'
-              ? new Date(query?.startDateTime)
-              : query?.startDateTime?.toISOString() || new Date().toISOString(),
-            typeof query?.endDateTime === 'string'
-              ? new Date(query?.endDateTime)
-              : query?.endDateTime?.toISOString() || new Date().toISOString(),
-          ],
+          dimension,
+          dateRange: [options.range.from.toISOString(), options.range.to.toISOString()],
+          [type === 0 ? 'granularity' : 'groupBy']: granularity,
         },
-        dimensions: ['timestamp', 'value'],
+        limit: 1000,
       };
-      const response = await this.request('metrics-repository/explore', params);
-      const datapoints = response.data.data;
-      if (datapoints === undefined) {
-        throw new Error('Remote endpoint reponse does not contain "datapoints" property.');
-      }
-
-      const timestamps: number[] = [];
-      const values: number[] = [];
-
-      for (let i = 0; i < datapoints.length; i++) {
-        if (datapoints[i].timestamp === undefined) {
-          throw new Error(`Data point ${i} does not contain "Time" property`);
+      const datapoints = await this.getAllData(type, params);
+      const dataPointsSeries = datapoints.reduce((prevValue: any, currValue: any) => {
+        for (const key of Object.keys(currValue)) {
+          if (!prevValue[key]) {
+            prevValue[key] = [currValue[key]];
+          } else {
+            prevValue[key].push(currValue[key]);
+          }
         }
-        if (datapoints[i].value === undefined) {
-          throw new Error(`Data point ${i} does not contain "Value" property`);
+        return prevValue;
+      }, {});
+      const fields = [];
+      for (const key in dataPointsSeries) {
+        let fieldType = FieldType.number;
+        if (key === 'timestamp') {
+          fieldType = FieldType.time;
         }
-        timestamps.push(Date.parse(datapoints[i].timestamp));
-        values.push(datapoints[i].value);
+        fields.push({ name: key, type: fieldType, values: dataPointsSeries[key] });
       }
-
       return new MutableDataFrame({
         refId: query.refId,
-        fields: [
-          { name: 'Time', type: FieldType.time, values: timestamps },
-          { name: 'Value', type: FieldType.number, values: values },
-        ],
+        fields,
       });
     });
 
     return Promise.all(promises).then((data) => ({ data }));
+  }
+
+  async getAllData(type: number, params: {}, responseData: DataPoint[] = []): Promise<DataPoint[]> {
+    const response = await this.request(`${API_MAP[type]}/explore`, params);
+    responseData = responseData.concat(response.data.data);
+    if (response.data.nextToken) {
+      return await this.getAllData(type, { ...params, nextToken: response.data.nextToken }, responseData);
+    }
+    return responseData;
   }
   async request(url: string, params = {}) {
     const response = getBackendSrv().fetch<DataSourceResponse>({
@@ -84,9 +86,19 @@ export class DataSource extends DataSourceApi<MyQuery, DataSourceOptions> {
    */
   async testDatasource() {
     const defaultErrorMessage = 'Cannot connect to API';
-
+    const params = {
+      dimensions: ['timestamp'],
+      order: {
+        timestamp: 'DESC',
+      },
+      limit: 1,
+      timeDimension: {
+        dimension: 'timestamp',
+        dateRange: ['2022-06-01T15:47:58.000Z', '2023-02-07T16:48:07.000Z'],
+      },
+    };
     try {
-      const response = await this.request('/healthz', {} as DataQueryRequest<MyQuery>);
+      const response = await this.request(`${API_MAP[1]}/explore`, params);
       if (response.status === 200) {
         return {
           status: 'success',
@@ -100,7 +112,7 @@ export class DataSource extends DataSourceApi<MyQuery, DataSourceOptions> {
       }
     } catch (err) {
       let message = '';
-      if (_.isString(err)) {
+      if (isString(err)) {
         message = err;
       } else if (isFetchError(err)) {
         message = 'Fetch error: ' + (err.statusText ? err.statusText : defaultErrorMessage);

@@ -2,15 +2,26 @@ import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 
 import React, { ChangeEvent, PureComponent } from 'react';
 import { DataSourceOptions, SecureJsonData } from '../types';
-import { LegacyForms } from '@grafana/ui';
+import { InlineField, LegacyForms, Select } from '@grafana/ui';
 
 const { FormField, SecretFormField } = LegacyForms;
 
-interface Props extends DataSourcePluginOptionsEditorProps<DataSourceOptions, SecureJsonData> {}
+const environmentOptions = [
+  {
+    label: 'PROD',
+    value: 'prod',
+  },
+  {
+    label: 'DEMO',
+    value: 'demo',
+  },
+  {
+    label: 'DEVELOP',
+    value: 'develop',
+  },
+];
 
-interface State {}
-
-export class ConfigEditor extends PureComponent<Props, State> {
+export class ConfigEditor extends PureComponent<DataSourcePluginOptionsEditorProps<DataSourceOptions, SecureJsonData>> {
   onSecretChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { onOptionsChange, options } = this.props;
     const secureJsonData = {
@@ -33,11 +44,13 @@ export class ConfigEditor extends PureComponent<Props, State> {
       } as SecureJsonData,
     });
   };
-  onChange = (event: ChangeEvent<HTMLInputElement>) => {
+  onChange = (name: string, value: string) => {
     const { onOptionsChange, options } = this.props;
+
     const jsonData = {
       ...options.jsonData,
-      [event.target.name]: event.target.value,
+      [name]: value,
+      apiEnv: name === 'env' && value === 'prod' ? '' : value + '.',
     };
     onOptionsChange({ ...options, jsonData });
   };
@@ -48,33 +61,31 @@ export class ConfigEditor extends PureComponent<Props, State> {
     return (
       <div className="gf-form-group">
         <div className="gf-form">
-          <FormField
-            label="Environment"
-            labelWidth={6}
-            inputWidth={20}
-            name="env"
-            onChange={this.onChange}
-            value={jsonData.env || ''}
-            placeholder="Environment from leanspace"
-          />
+          <InlineField labelWidth={12} label="Environment">
+            <Select
+              width={40}
+              options={environmentOptions}
+              onChange={({ value }) => value && this.onChange('env', value)}
+              value={jsonData.env}
+              onCreateOption={(value) => undefined}
+            />
+          </InlineField>
         </div>
         <div className="gf-form">
           <FormField
             label="Tenant"
-            labelWidth={6}
-            inputWidth={20}
             name="tenant"
-            onChange={this.onChange}
+            inputWidth={20}
+            onChange={({ target: { value } }) => this.onChange('tenant', value)}
             value={jsonData.tenant || ''}
             placeholder="Tenant from leanspace"
           />
         </div>
         <div className="gf-form">
           <SecretFormField
-            label="CLient ID"
-            labelWidth={6}
-            inputWidth={20}
+            label="Client ID"
             name="clientId"
+            inputWidth={20}
             onChange={this.onSecretChange}
             isConfigured={Boolean(secureJsonFields.clientId)}
             value={secureJsonData?.clientId || ''}
@@ -88,7 +99,6 @@ export class ConfigEditor extends PureComponent<Props, State> {
             <SecretFormField
               label="Client Secret"
               placeholder="Client Secret token from leanspace"
-              labelWidth={6}
               inputWidth={20}
               isConfigured={Boolean(secureJsonFields.clientSecret)}
               name="clientSecret"

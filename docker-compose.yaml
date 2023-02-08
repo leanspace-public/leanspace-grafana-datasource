@@ -2,7 +2,7 @@ version: '3.0'
 
 services:
   grafana:
-    container_name: 'leanspace-metrics-datasource'
+    container_name: 'leanspace-grafana-datasource'
     build:
       context: ./.config
       args:
@@ -10,5 +10,5 @@ services:
     ports:
       - 3000:3000/tcp
     volumes:
-      - ./dist:/var/lib/grafana/plugins/leanspace-metrics-datasource
+      - ./dist:/var/lib/grafana/plugins/leanspace-grafana-datasource
       - ./provisioning:/etc/grafana/provisioning
