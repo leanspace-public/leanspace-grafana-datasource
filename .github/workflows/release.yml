@@ -3,10 +3,6 @@ on:
   push:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
-permissions:
-  # Write permissions required to create a release
-  # Ref: https://stackoverflow.com/a/69941765
-  contents: write
 jobs:
   release:
     runs-on: ubuntu-latest
