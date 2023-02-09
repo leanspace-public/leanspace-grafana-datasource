@@ -3,6 +3,7 @@ on:
   push:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -40,11 +41,14 @@ jobs:
           assert version == json.load(open('package.json'))['version']
           print(f'::set-output name=version::{version}')
         shell: python
+      - name: Compare version and Github tag
+        run: |
+          [ "${{ steps.version.outputs.version }}" = "${GITHUB_REF#refs/tags/}" ] || { echo 'plugin version and github tag mismatch'; exit 1; }
       - name: Package plugin
         run: |
           mv dist leanspace-grafana-datasource
-          zip -r leanspace-grafana-datasource-${GITHUB_REF#refs/tags/}.zip leanspace-grafana-datasource
-          sha256sum leanspace-grafana-datasource-${GITHUB_REF#refs/tags/}.zip >SHA256SUMS
+          zip -r leanspace-grafana-datasource-${{ steps.version.outputs.version }}.zip leanspace-grafana-datasource
+          sha256sum leanspace-grafana-datasource-${{ steps.version.outputs.version }}.zip >SHA256SUMS
       - name: Generate changelog
         run: awk '/^## / {s++} s==1 {print} s==2 {exit}' CHANGELOG.md | tail -n+2 > RELEASE_CHANGELOG.md
       - uses: softprops/action-gh-release@v1
@@ -52,5 +56,5 @@ jobs:
           draft: true
           body_path: RELEASE_CHANGELOG.md
           files: |
-            leanspace-grafana-datasource-${GITHUB_REF#refs/tags/}.zip
+            leanspace-grafana-datasource-${{ steps.version.outputs.version }}.zip
             SHA256SUMS
